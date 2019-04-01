@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <title>抽奖系统</title>
+    <script src="{{static_url("jquery-3.3.1.min.js")}}"></script>
+    <script type = "text/javascript">
+        $(document).ready(function () {
+            $("#select").click(function () {
+                let prizeList = document.getElementsByName("prize");
+                let prize;
+                for (let i = 0; i < prizeList.length; i++) {
+                    if (prizeList[i].checked) {
+                        prize = i + 1;
+                    }
+                }
+                let count = $("#count").val();
+                let info = {message: "select", count: count, prize_type: prize};
+                $.ajax({
+                    type: "post",
+                    url: "/random_select",
+                    data: info,
+                    cache: false,
+                    success: function (res) {
+                        if (res == -1) {
+                            alert("人数不足");
+                        } else {
+                            let resNewReward = res["newReward"];
+                            let resRewardRecord = res["rewardRecord"];
+                            let newReward = "<table><tr><th>姓名</th><th>手机号</th></tr>";
+                            for (let i = 0; i < resNewReward.length; i++) {
+                                newReward += "<tr>"
+                                    + "<td>" + resNewReward[i][0] + "</td>"
+                                    + "<td>" + resNewReward[i][1] + "</td>"
+                                    + "</tr>";
+                            }
+                            newReward += "</table>";
+                            $("#new_reward").html(newReward);
+                            let rewardRecord = "<table><tr><th>姓名</th><th>手机号</th><th>奖项</th></tr>";
+                            for (let i = 0; i < resRewardRecord.length; i++) {
+                                rewardRecord += "<tr>"
+                                    + "<td>" + resRewardRecord[i][0] + "</td>"
+                                    + "<td>" + resRewardRecord[i][1] + "</td>"
+                                    + "<td>" + resRewardRecord[i][2] + "</td>"
+                                    + "</tr>";
+                            }
+                            rewardRecord += "</table>";
+                            $("#reward_list").html(rewardRecord);
+                        }
+                    },
+                    error: function () {
+                        alert("后台有误！请确与管理员联系！");
+                    }
+                });
+                $("#refresh").click(function () {
+                    $.ajax({
+                        type: "post",
+                        url: "/random_select",
+                        data: {message:"refresh"},
+                        cache: false,
+                        success: function () {
+                            location.reload();
+                        },
+                        error: function () {
+                            alert("后台有误！请确与管理员联系！");
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+<h1>抽奖系统</h1>
+<p>选择奖品等级和人数，点击“抽奖！”，网页上会显示中奖人。</p>
+<p>奖品类型:</p>
+<input type="radio" name="prize" value="1" checked>一等奖
+<input type="radio" name="prize" value="2">二等奖
+<input type="radio" name="prize" value="3">三等奖
+<br>
+<p>获奖人数:</p>
+<input type="text" name="count" id="count" value="1" required>
+<br><br>
+<input type="button" value="抽奖！" id="select">
+<input type="button" value="刷新" id="refresh">
+<br>
+<p>新增获奖人：</p>
+<div id="new_reward">
+</div>
+<p>获奖名单：</p>
+<div id="reward_list">{{table}}
+</div>
+</body>
+</html>

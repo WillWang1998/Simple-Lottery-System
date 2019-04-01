@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>抽奖参与人管理</title>
+    <script src="{{static_url("jquery-3.3.1.min.js")}}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#add_user").click(function () {
+                let phone = $("#phone").val();
+                let name = $("#name").val();
+                if (phone != "" && name != "") {
+                    let info = {"command": 1, "phone": phone, "name": name};
+                    $.ajax({
+                        type: "post",
+                        url: "/management",
+                        data: info,
+                        cache: false,
+                        success: function (res) {
+                            if (res == 1) {
+                                location.reload();
+                            } else if (res == -1) {
+                                alert("手机号重复！");
+                            } else if(res == 0){
+                                alert("姓名重复！");
+                            }
+                        },
+                        error: function () {
+                            alert("后台有误！请联系管理员！");
+                        }
+                    });
+                }
+            });
+        });
+        $.ajax({
+            type: "get",
+            url: "/management",
+            cache: false,
+            success: function (res) {
+                let data = "{{table}}";
+                console.log(data);
+                data=data.replace(/&quot;/gi,'"');
+                console.log(data);
+                let table=JSON.parse(data);
+                let tablehtml ="<table><tr><th>手机号</th><th>姓名</th><th>删除</th></tr>";
+                for(let i=0;i<table.length;i++)
+                    tablehtml+="<tr><th>"+table[i][0]+"</th><th>"+table[i][1]
+                        +"</th><th><a href=\"#\" onclick=\"deleteParticipant(\'"+table[i][0]+"\')\">x</a></tr>";
+                tablehtml+="</table>";
+                $("#info").html(tablehtml);
+            },
+            error: function () {
+                alert("后台有误！请联系管理员！");
+            }
+        });
+        function deleteParticipant(number) {
+            $.ajax({
+                type: "post",
+                url: "/management",
+                data: {"command": 0, "phone":number},
+                cache: false,
+                success: function (res) {
+                    if(res==1) location.reload();
+                    else alert("该用户不再存在！");
+                },
+                error: function () {
+                    alert("后台有误！请联系管理员！");
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+<h1>添加抽奖人</h1>
+<p><span>手机号：</span><br><input type="text" id="phone"></p>
+<p><span>姓名：</span><br><input type="text" id="name"></p>
+<p><input type="button" value="添加" id="add_user"><a href="/" class="button_label"><input type="button" value="返回" id="back"></a></p>
+<h1>管理抽奖人</h1>
+<div id="info"></div>
+</body>
+</html>
